@@ -12,13 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up PHP (Ubuntu runners include PHP but set version to match)
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, xml, zip, bcmath, intl, pdo_mysql
-          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,9 +24,9 @@ jobs:
           node-version: '18'
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Install NPM
+      - name: Build frontend
         run: |
           npm ci
           npm run build
@@ -38,29 +36,6 @@ jobs:
 
       - name: Generate app key
         run: php artisan key:generate --force
-
-
-      - name: Generate .env for CI (for migrate)
-        run: |
-          php -r "file_exists('.env.ci') || copy('.env.example', '.env.ci');"
-          php -r "file_put_contents('.env.ci', str_replace(['DB_HOST=127.0.0.1','DB_DATABASE=laravel'], ['DB_HOST='.$ENV['DB_HOST'],'DB_DATABASE='.$ENV['DB_DATABASE']], file_get_contents('.env.ci')));"
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-
-      - name: Run migrations
-        env:
-          APP_ENV: production
-          APP_KEY: ${{ secrets.APP_KEY }}
-          DB_CONNECTION: mysql
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          php artisan key:generate --force
-          php artisan migrate --force
 
       - name: Deploy to Azure WebApp
         uses: azure/webapps-deploy@v2
