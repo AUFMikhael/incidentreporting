@@ -59,12 +59,16 @@ jobs:
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
 
+      - name: Zip deployment package
+        run: |
+          cd deploy
+          zip -r ../laravel-app.zip .
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: laravel-app
-          path: deploy
+          path: laravel-app.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -75,12 +79,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: laravel-app
-          path: ./deploy-out
+          path: .
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "incidentreporting-app-aufmikhael"
           slot-name: "Production"
-          package: ./deploy-out
+          package: laravel-app.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
