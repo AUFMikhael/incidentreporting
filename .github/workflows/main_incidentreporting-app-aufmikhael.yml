@@ -2,12 +2,11 @@ name: Deploy Laravel to Azure Web App
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,46 +40,30 @@ jobs:
           # Copy entire project
           rsync -av . deploy \
             --exclude=node_modules \
-            --exclude=vendor \
             --exclude=.git \
             --exclude=.github
 
-          # Copy vendor separately
+          # Copy vendor
           rsync -av vendor/ deploy/vendor/
 
-          # Move PUBLIC assets into root of deploy (Azure webroot)
+          # Move public contents to root
           cp -r public/* deploy/
 
-          # Fix index.php paths (public index moved to root)
+          # Fix index.php paths
           sed -i "s|__DIR__.'/../vendor|__DIR__.'/vendor|g" deploy/index.php
           sed -i "s|__DIR__.'/../bootstrap|__DIR__.'/bootstrap|g" deploy/index.php
 
-          # Remove Azure placeholder file if exists
+          # Remove Azure default file
           rm -f deploy/hostingstart.html
 
-      - name: Zip deployment package
+      - name: Create ZIP package
         run: |
           cd deploy
-          zip -r ../laravel-app.zip .
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: laravel-app
-          path: laravel-app.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: laravel-app
+          zip -r ../app.zip .
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "incidentreporting-app-aufmikhael"
-          slot-name: "Production"
-          package: "laravel-app.zip"
+          package: "app.zip"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
