@@ -53,9 +53,10 @@ jobs:
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
 
-      - name: Zip deployment package
+      - name: Zip deployment package (FLATTENED ZIP)
         run: |
-          zip -r laravel-app.zip deploy
+          cd deploy
+          zip -r ../laravel-app.zip .
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
