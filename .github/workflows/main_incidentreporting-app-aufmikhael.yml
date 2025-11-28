@@ -43,20 +43,22 @@ jobs:
         run: |
           mkdir deploy
 
-          # Public folder → becomes the webroot
-          cp -R public/* deploy/
+          # 1. Copy public files (webroot)
+          rsync -av public/ deploy/
 
-          # Laravel runtime files (storage, bootstrap)
-          cp -R bootstrap deploy/bootstrap
-          cp -R storage deploy/storage
+          # 2. Copy framework files (Laravel app)
+          rsync -av app/ deploy/app/
+          rsync -av bootstrap/ deploy/bootstrap/
+          rsync -av vendor/ deploy/vendor/
+          rsync -av routes/ deploy/routes/
+          rsync -av config/ deploy/config/
+          rsync -av storage/ deploy/storage/
 
-          # Framework files needed for index.php autoload
-          cp -R vendor deploy/vendor
+          # 3. Copy required files
+          cp artisan deploy/artisan
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
 
-          # Artisan CLI
-          cp artisan deploy/artisan
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
