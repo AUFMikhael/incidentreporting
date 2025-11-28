@@ -1,4 +1,7 @@
-name: Build and deploy Laravel app to Azure Web App - incidentreporting-app-aufmikhael
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy PHP app to Azure Web App - incidentreporting-app-aufmikhael
 
 on:
   push:
@@ -10,75 +13,48 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
-          extensions: mbstring, intl, pdo_mysql, bcmath
-          coverage: none
+          php-version: '8.2'
 
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      - name: Set folder permissions for Laravel
-        run: chmod -R 777 storage bootstrap/cache
-
-      - name: Set up Node and NPM
-        uses: actions/setup-node@v4
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
         with:
-          node-version: '18'
+          files: 'composer.json'
 
-      - name: Install and build frontend assets
-        run: |
-          npm install
-          npm run build
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
-      - name: Prepare deployment package (Laravel structure for Azure)
-        run: |
-          mkdir deploy
-          rsync -av public/ deploy/
-          rsync -av app/ deploy/app/
-          rsync -av bootstrap/ deploy/bootstrap/
-          rsync -av vendor/ deploy/vendor/
-          rsync -av routes/ deploy/routes/
-          rsync -av config/ deploy/config/
-          rsync -av storage/ deploy/storage/
-          cp artisan deploy/artisan
-          cp composer.json deploy/composer.json
-          cp composer.lock deploy/composer.lock
 
-      - name: Zip deployment package (FLATTENED ZIP)
-        run: |
-          cd deploy
-          zip -r ../laravel-app.zip .
-
-      - name: Upload artifact for deployment
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
-          path: ./laravel-app.zip
+          name: php-app
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
+    
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
-          path: .
-
-      - name: Deploy to Azure Web App
+          name: php-app
+      
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
-          app-name: "incidentreporting-app-aufmikhael"
-          slot-name: "Production"
-          package: ./laravel-app.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
+          app-name: 'incidentreporting-app-aufmikhael'
+          slot-name: 'Production'
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E13ACA1069B842FEBA9651E14371CC1E }}
