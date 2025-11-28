@@ -75,11 +75,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: laravel-app
+          path: ./deploy-out
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "incidentreporting-app-aufmikhael"
           slot-name: "Production"
-          package: laravel-app
+          package: ./deploy-out
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
