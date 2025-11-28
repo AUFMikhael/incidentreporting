@@ -59,7 +59,11 @@ jobs:
       - name: Create ZIP package
         run: |
           cd deploy
+          # IMPORTANT: zip the *contents* of deploy, not the folder itself
           zip -rq ../app.zip *
+
+      - name: Debug ZIP contents
+        run: unzip -l app.zip
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
