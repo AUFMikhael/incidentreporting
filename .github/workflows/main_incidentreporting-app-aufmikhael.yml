@@ -42,33 +42,26 @@ jobs:
       - name: Prepare deployment package (Laravel structure for Azure)
         run: |
           mkdir deploy
-
-          # 1. Copy public files (webroot)
           rsync -av public/ deploy/
-
-          # 2. Copy framework files (Laravel app)
           rsync -av app/ deploy/app/
           rsync -av bootstrap/ deploy/bootstrap/
           rsync -av vendor/ deploy/vendor/
           rsync -av routes/ deploy/routes/
           rsync -av config/ deploy/config/
           rsync -av storage/ deploy/storage/
-
-          # 3. Copy required files
           cp artisan deploy/artisan
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
 
       - name: Zip deployment package
         run: |
-          cd deploy
-          zip -r ../laravel-app.zip .
+          zip -r laravel-app.zip deploy
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: laravel-app
-          path: laravel-app.zip
+          path: ./laravel-app.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -86,5 +79,5 @@ jobs:
         with:
           app-name: "incidentreporting-app-aufmikhael"
           slot-name: "Production"
-          package: laravel-app.zip
+          package: ./laravel-app.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
