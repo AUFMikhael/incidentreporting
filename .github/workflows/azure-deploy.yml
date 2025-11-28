@@ -33,6 +33,13 @@ jobs:
           npm ci
           npm run build
 
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate --force
+
+
       - name: Generate .env for CI (for migrate)
         run: |
           php -r "file_exists('.env.ci') || copy('.env.example', '.env.ci');"
