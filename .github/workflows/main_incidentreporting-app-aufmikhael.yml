@@ -81,5 +81,5 @@ jobs:
         with:
           app-name: "incidentreporting-app-aufmikhael"
           slot-name: "Production"
-          package: .
+          package: laravel-app
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_94D2516FFB2A45FC993B50D6BE8BF0A0 }}
