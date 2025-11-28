@@ -1,4 +1,4 @@
-name: Build and deploy Laravel app to Azure Web App - incidentreporting-app-aufmikhael
+name: Deploy Laravel to Azure Web App
 
 on:
   push:
@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -34,26 +35,28 @@ jobs:
 
       - name: Prepare deployment package
         run: |
+          rm -rf deploy
           mkdir deploy
-          
-          # Move only PUBLIC assets to webroot
-          rsync -av public/ deploy/
 
-          # Move backend framework files
-          rsync -av app/ deploy/app/
-          rsync -av bootstrap/ deploy/bootstrap/
+          # Copy entire project
+          rsync -av . deploy \
+            --exclude=node_modules \
+            --exclude=vendor \
+            --exclude=.git \
+            --exclude=.github
+
+          # Copy vendor separately
           rsync -av vendor/ deploy/vendor/
-          rsync -av routes/ deploy/routes/
-          rsync -av config/ deploy/config/
-          rsync -av storage/ deploy/storage/
 
-          cp artisan deploy/artisan
-          cp composer.json deploy/composer.json
-          cp composer.lock deploy/composer.lock
+          # Move PUBLIC assets into root of deploy (Azure webroot)
+          cp -r public/* deploy/
 
-          # Move public index.php to root
-          mv deploy/index.php deploy/public_index.php
-          cp public/index.php deploy/index.php
+          # Fix index.php paths (public index moved to root)
+          sed -i "s|__DIR__.'/../vendor|__DIR__.'/vendor|g" deploy/index.php
+          sed -i "s|__DIR__.'/../bootstrap|__DIR__.'/bootstrap|g" deploy/index.php
+
+          # Remove Azure placeholder file if exists
+          rm -f deploy/hostingstart.html
 
       - name: Zip deployment package
         run: |
