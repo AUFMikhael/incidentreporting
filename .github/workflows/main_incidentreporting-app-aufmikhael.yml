@@ -55,8 +55,7 @@ jobs:
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
 
-          # Laravel entry point (server.php → index.php fallback)
-          cp server.php deploy/server.php
+          # Artisan CLI
           cp artisan deploy/artisan
 
       - name: Upload artifact for deployment
